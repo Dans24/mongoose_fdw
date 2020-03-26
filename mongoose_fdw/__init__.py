@@ -1,6 +1,6 @@
 ###
-### Author: David Wallin
-### Time-stamp: <2015-03-05 21:54:14 dwa>
+### Author: David Wallin, Daniel Costa
+### Time-stamp: <2020-03-26 15:47:00 dwa>
 
 from multicorn import ForeignDataWrapper
 from multicorn.utils import log_to_postgres as log2pg
@@ -8,7 +8,7 @@ from multicorn.utils import log_to_postgres as log2pg
 from pymongo import MongoClient
 from dateutil.parser import parse
 
-from functools import partial
+from functools import partial, reduce
 
 dict_traverser = partial(reduce,
                          lambda x, y: x.get(y, {}) if type(x) == dict else x)
@@ -84,7 +84,7 @@ class Mongoose_fdw (ForeignDataWrapper):
         Q = self.build_spec(quals)
         # log2pg('spec: {}'.format(Q))
         # log2pg('fields: {}'.format(fields))
-        cur = self.coll.find(spec=Q, fields=fields, snapshot=True)
+        cur = self.coll.find(filter=Q, projection=fields)
         for doc in cur:
             yield {col: dict_traverser(self.fields[col]['path'], doc) for col in columns}
 
